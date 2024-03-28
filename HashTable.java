@@ -17,7 +17,6 @@ public class HashTable {
     private int size;
     private int capacity;
     private static final double LOAD_FACTOR = 0.75;
-    private static final double SHRINK_FACTOR = 0.25;
 
     public HashTable(int initialCapacity) {
         this.capacity = initialCapacity;
@@ -26,13 +25,19 @@ public class HashTable {
     }
 
     private int hash(int key) {
-        double A = (Math.sqrt(5) - 1) / 2; // Multiplication factor
-        int hashCode = (int) Math.floor(capacity * ((key * A) % 1)); // Multiplication method
-        return hashCode;
+        // Multiplication method
+        double A = (Math.sqrt(5) - 1) / 2;
+        int multiplicationHashCode = (int) Math.floor(capacity * ((key * A) % 1));
+
+        // Division method
+        int divisionHashCode = key % capacity;
+
+        // Combine the hash codes using XOR
+        return multiplicationHashCode ^ divisionHashCode;
     }
 
     public void put(int key, int value) {
-        int index = hash(key);
+        int index = hash(key) % capacity; // Apply modulo operation to ensure index is within bounds
         HashNode newNode = new HashNode(key, value);
 
         if (table[index] == null) {
@@ -51,7 +56,7 @@ public class HashTable {
         }
         size++;
         if ((double) size / capacity >= LOAD_FACTOR) {
-            resizeTable(capacity * 2);
+            resizeTable();
         }
     }
 
@@ -78,8 +83,8 @@ public class HashTable {
                     current.prev.next = current.next;
                 }
                 size--;
-                if ((double) size / capacity <= SHRINK_FACTOR) {
-                    resizeTable(capacity / 2);
+                if ((double) size / capacity <= 0.25) {
+                    resizeTable();
                 }
                 return;
             }
@@ -87,14 +92,15 @@ public class HashTable {
         }
     }
 
-    private void resizeTable(int newCapacity) {
+    private void resizeTable() {
+        int newCapacity = capacity * 2;
         HashNode[] newTable = new HashNode[newCapacity];
 
         for (int i = 0; i < capacity; i++) {
             HashNode current = table[i];
             while (current != null) {
                 HashNode next = current.next;
-                int newIndex = hash(current.key);
+                int newIndex = hash(current.key) % newCapacity; // Apply modulo operation for new capacity
                 if (newTable[newIndex] == null) {
                     newTable[newIndex] = current;
                 } else {
@@ -130,8 +136,9 @@ public class HashTable {
     }
 }
 
-Output : 
+Output :
 
 Value corresponding to key 21: -1
 Value corresponding to key 11 after removal: -1
+
 
